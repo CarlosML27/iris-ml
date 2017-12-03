@@ -2,6 +2,7 @@ import csv
 import argparse
 import random
 import math
+import operator
 
 DEFAULT_FILENAME = '../data/iris.csv'
 DEFAULT_SPLIT_RATIO = 0.66
@@ -56,16 +57,27 @@ def euclidean_distance(instance1, instance2):
 def calculate_distance(instance1, instance2, length):
 	return euclidean_distance(instance1[:length], instance2[:length])
 
+def get_neighbours(training_set, test_instance, k):
+	distances = []
+	for x in range(len(training_set)):
+		distance = calculate_distance(training_set[x], test_instance, len(test_instance)-1)
+		distances.append((training_set[x], distance))
+	distances.sort(key=operator.itemgetter(1))
+	neighbours = []
+	for x in range(k):
+		neighbours.append(distances[x][0])
+	return neighbours
+
 def main():
 	args = retrieve_args()
 	filename = get_filename(args)
 	rows = get_rows(filename)
 	split_ratio = get_split_ratio(args)
 	training_set, test_set = split_data(rows, split_ratio)
-	print("Train: {}".format(repr(len(training_set))))
-	print("Test: {}".format(repr(len(test_set))))
-	data1 = [2, 7, -1, 'a']
-	data2 = [0, 6, 4, 'b']
-	distance = calculate_distance(data1, data2, len(data1)-1)
-	print("Distance: {}".format(repr(distance)))
+	train_set = [[1,2,3,'a'],[1,5,7,'b'],[-3,4,2,'c']]
+	test_instance = [2,3,6,'d']
+	k=2
+	neighbours = get_neighbours(train_set, test_instance, k)
+	print(neighbours)
+
 main()
