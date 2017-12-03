@@ -3,15 +3,25 @@ import argparse
 import random
 
 DEFAULT_FILENAME = '../data/iris.csv'
-SPLIT_RATIO = 0.66
+DEFAULT_SPLIT_RATIO = 0.66
+
+def restricted_float(x):
+	x = float(x)
+	if x < 0.0 or x > 1.0:
+		raise argparse.ArgumentTypeError("%r not in range [0.0, 1.0]"%(x,))
+	return x
 
 def retrieve_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-o", "--original", help="use R.Fisher original data", action='store_true')
+	parser.add_argument("-r", "--ratio", help="change split ratio of the data (default=0.66)", action="store", default=DEFAULT_SPLIT_RATIO, type=restricted_float)
 	return parser.parse_args()
 	
 def get_filename(args):
 	return '../data/iris-original.csv' if args.original else DEFAULT_FILENAME
+
+def get_split_ratio(args):
+	return args.ratio
 
 def print_rows(rows):
 	separator = ', '
@@ -40,6 +50,7 @@ def split_data(data, split_ratio):
 args = retrieve_args()
 filename = get_filename(args)
 rows = get_rows(filename)
-training_set, test_set = split_data(rows, SPLIT_RATIO)
+split_ratio = get_split_ratio(args)
+training_set, test_set = split_data(rows, split_ratio)
 print("Train: {}".format(repr(len(training_set))))
 print("Test: {}".format(repr(len(test_set))))
