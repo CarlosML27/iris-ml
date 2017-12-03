@@ -1,6 +1,7 @@
 import csv
 import argparse
 import random
+import math
 
 DEFAULT_FILENAME = '../data/iris.csv'
 DEFAULT_SPLIT_RATIO = 0.66
@@ -46,11 +47,25 @@ def split_data(data, split_ratio):
 			test_set.append(data[x])	
 	return training_set, test_set
 
+def euclidean_distance(instance1, instance2):
+	distance = 0
+	for x in range(len(instance1)):
+		distance += pow((instance1[x]-instance2[x]), 2)
+	return math.sqrt(distance)
 
-args = retrieve_args()
-filename = get_filename(args)
-rows = get_rows(filename)
-split_ratio = get_split_ratio(args)
-training_set, test_set = split_data(rows, split_ratio)
-print("Train: {}".format(repr(len(training_set))))
-print("Test: {}".format(repr(len(test_set))))
+def calculate_distance(instance1, instance2, length):
+	return euclidean_distance(instance1[:length], instance2[:length])
+
+def main():
+	args = retrieve_args()
+	filename = get_filename(args)
+	rows = get_rows(filename)
+	split_ratio = get_split_ratio(args)
+	training_set, test_set = split_data(rows, split_ratio)
+	print("Train: {}".format(repr(len(training_set))))
+	print("Test: {}".format(repr(len(test_set))))
+	data1 = [2, 7, -1, 'a']
+	data2 = [0, 6, 4, 'b']
+	distance = calculate_distance(data1, data2, len(data1)-1)
+	print("Distance: {}".format(repr(distance)))
+main()
