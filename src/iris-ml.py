@@ -6,17 +6,25 @@ import operator
 
 DEFAULT_FILENAME = '../data/iris.csv'
 DEFAULT_SPLIT_RATIO = 0.66
+DEFAULT_K = 3
 
 def restricted_float(x):
 	x = float(x)
 	if x < 0.0 or x > 1.0:
-		raise argparse.ArgumentTypeError("%r not in range [0.0, 1.0]"%(x,))
+		raise argparse.ArgumentTypeError("{} not in range [0.0, 1.0]".format(x))
+	return x
+
+def positive_int(x):
+	x = int(x)
+	if x <= 0:
+		raise argparse.ArgumentTypeError("{} is not a positive integer".format(x))
 	return x
 
 def retrieve_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-o", "--original", help="use R.Fisher original data", action='store_true')
-	parser.add_argument("-r", "--ratio", help="change split ratio of the data (default=0.66)", action="store", default=DEFAULT_SPLIT_RATIO, type=restricted_float)
+	parser.add_argument("-r", "--ratio", help="change split ratio of the data (default={})".format(DEFAULT_SPLIT_RATIO), action="store", default=DEFAULT_SPLIT_RATIO, type=restricted_float)
+	parser.add_argument("-k", "--neighbours", help="change number of neighbours used in kNN (default={})".format(DEFAULT_K), action="store" ,default=DEFAULT_K, type=positive_int)
 	return parser.parse_args()
 	
 def get_filename(args):
@@ -24,6 +32,9 @@ def get_filename(args):
 
 def get_split_ratio(args):
 	return args.ratio
+
+def get_k(args):
+	return args.neighbours	
 
 def print_rows(rows):
 	separator = ', '
@@ -57,16 +68,36 @@ def euclidean_distance(instance1, instance2):
 def calculate_distance(instance1, instance2, length):
 	return euclidean_distance(instance1[:length], instance2[:length])
 
+def get_neighbour_instance(distances, x):
+	return distances[x][0]
+
 def get_neighbours(training_set, test_instance, k):
 	distances = []
+	length = len(test_instance)-1
 	for x in range(len(training_set)):
-		distance = calculate_distance(training_set[x], test_instance, len(test_instance)-1)
+		distance = calculate_distance(training_set[x], test_instance, length)
 		distances.append((training_set[x], distance))
 	distances.sort(key=operator.itemgetter(1))
 	neighbours = []
 	for x in range(k):
-		neighbours.append(distances[x][0])
+		neighbour = get_neighbour_instance(distances, x)
+		neighbours.append(neighbour)
 	return neighbours
+
+def get_class(instance):
+	return instance[-1]
+
+def get_result(training_set, test_instance, k):
+	neighbours = get_neighbours(training_set, test_instance, k)
+	class_votes = {}
+	for x in range(len(neighbours)):
+		result = get_class(neighbours[x])
+		if result in class_votes:
+			class_votes[result] += 1
+		else:
+			class_votes[result] = 1
+	sorted_votes = sorted(class_votes.items(), key=operator.itemgetter(1), reverse=True)
+	return sorted_votes[0][0]
 
 def main():
 	args = retrieve_args()
@@ -74,10 +105,9 @@ def main():
 	rows = get_rows(filename)
 	split_ratio = get_split_ratio(args)
 	training_set, test_set = split_data(rows, split_ratio)
-	train_set = [[1,2,3,'a'],[1,5,7,'b'],[-3,4,2,'c']]
-	test_instance = [2,3,6,'d']
-	k=2
-	neighbours = get_neighbours(train_set, test_instance, k)
-	print(neighbours)
+	k = get_k(args)
+	for x in range(len(test_set)):
+		result = get_result(training_set, test_set[x], k)
+		print("> predicted={}, actual={}".format(repr(result), repr(get_class(test_set[x]))))
 
 main()
