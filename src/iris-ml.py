@@ -5,13 +5,16 @@ import math
 import operator
 
 DEFAULT_FILENAME = '../data/iris.csv'
+ORIGINAL_FILENAME = '../data/iris-original.csv'
 DEFAULT_SPLIT_RATIO = 0.66
-DEFAULT_K = 3
+DEFAULT_K_VALUE = 3
 
 def restricted_float(x):
 	x = float(x)
-	if x < 0.0 or x > 1.0:
-		raise argparse.ArgumentTypeError("{} not in range [0.0, 1.0]".format(x))
+	lower_value = 0.0
+	upper_value = 1.0
+	if x < lower_value or x > upper_value:
+		raise argparse.ArgumentTypeError("{} is not in the range [{}, {}]".format(x, lower_value, upper_value))
 	return x
 
 def positive_int(x):
@@ -24,35 +27,37 @@ def retrieve_args():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-o", "--original", help="use R.Fisher original data", action='store_true')
 	parser.add_argument("-r", "--ratio", help="change split ratio of the data (default={})".format(DEFAULT_SPLIT_RATIO), action="store", default=DEFAULT_SPLIT_RATIO, type=restricted_float)
-	parser.add_argument("-k", "--neighbours", help="change number of neighbours used in kNN (default={})".format(DEFAULT_K), action="store" ,default=DEFAULT_K, type=positive_int)
+	parser.add_argument("-k", "--neighbours", help="change number of neighbours used in kNN (default={})".format(DEFAULT_K_VALUE), action="store" ,default=DEFAULT_K_VALUE, type=positive_int)
 	return parser.parse_args()
-	
+
 def get_filename(args):
-	return '../data/iris-original.csv' if args.original else DEFAULT_FILENAME
+	return ORIGINAL_FILENAME if args.original else DEFAULT_FILENAME
 
 def get_split_ratio(args):
 	return args.ratio
 
-def get_k(args):
+def get_k_value(args):
 	return args.neighbours	
+
+def get_rows(filename):
+	with open(filename, 'rt') as csvfile:	
+		dataset = csv.reader(csvfile)
+		datasetlist = list(dataset)
+		rows = datasetlist[1:]
+		for x in range(len(rows)):
+			for y in range(len(rows[x])-1):
+				rows[x][y] = float(rows[x][y])
+		return rows
 
 def print_rows(rows):
 	separator = ', '
 	for row in rows:
 		print(separator.join(row))
 
-def get_rows(filename):
-	with open(filename, 'rt') as csvfile:	
-		dataset = csv.reader(csvfile)
-		datasetlist = list(dataset)
-		return datasetlist[1:]
-
 def split_data(data, split_ratio):
 	training_set = []
 	test_set = []
 	for x in range(len(data)):
-		for y in range(4):
-			data[x][y] = float(data[x][y])
 		if random.random() < split_ratio:
 			training_set.append(data[x])
 		else:
@@ -68,26 +73,34 @@ def euclidean_distance(instance1, instance2):
 def calculate_distance(instance1, instance2, length):
 	return euclidean_distance(instance1[:length], instance2[:length])
 
-def get_neighbour_instance(distances, x):
-	return distances[x][0]
-
-def get_neighbours(training_set, test_instance, k):
+def get_distances(training_set, test_instance):
 	distances = []
 	length = len(test_instance)-1
 	for x in range(len(training_set)):
 		distance = calculate_distance(training_set[x], test_instance, length)
 		distances.append((training_set[x], distance))
-	distances.sort(key=operator.itemgetter(1))
+	distances.sort(key=operator.itemgetter(1))	
+	return distances
+
+def get_neighbour_instance(distances, x):
+	return distances[x][0]
+
+def get_k_nearest_instances(distances, k):
 	neighbours = []
 	for x in range(k):
 		neighbour = get_neighbour_instance(distances, x)
 		neighbours.append(neighbour)
 	return neighbours
 
+def get_neighbours(training_set, test_instance, k):
+	distances = get_distances(training_set, test_instance)
+	neighbours = get_k_nearest_instances(distances, k)
+	return neighbours
+
 def get_class(instance):
 	return instance[-1]
 
-def get_result(training_set, test_instance, k):
+def get_prediction(training_set, test_instance, k):
 	neighbours = get_neighbours(training_set, test_instance, k)
 	class_votes = {}
 	for x in range(len(neighbours)):
@@ -110,17 +123,20 @@ def get_performance(predictions):
 def main():
 	args = retrieve_args()
 	filename = get_filename(args)
-	rows = get_rows(filename)
 	split_ratio = get_split_ratio(args)
+	k_value = get_k_value(args)
+	rows = get_rows(filename)
 	training_set, test_set = split_data(rows, split_ratio)
-	k = get_k(args)
 	test_set_length = len(test_set)
 	predictions = [[0 for x in range(2)] for y in range(test_set_length)]
 	for x in range(test_set_length):
-		result = get_result(training_set, test_set[x], k)
-		instance_class = get_class(test_set[x])
+		instance = test_set[x]
+		prediction = get_prediction(training_set, instance, k_value)
+		instance_class = get_class(instance)
 		predictions[x][0] = instance_class
-		predictions[x][1] = result
-		print("> predicted={}, actual={}".format(repr(result), repr(instance_class)))
-	print(">>>> ACCURACY: {}%".format(get_performance(predictions)))
-main()
+		predictions[x][1] = prediction
+		print("> predicted={}, actual={}".format(repr(prediction), repr(instance_class)))
+	print(">>> ACCURACY: {}%".format(get_performance(predictions)))
+
+if __name__ == '__main__':
+	main()
