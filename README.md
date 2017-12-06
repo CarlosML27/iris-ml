@@ -47,9 +47,34 @@ To run the project, open a terminal window in "src" folder and type the followin
 
 	python3 iris-ml.py
 	
+### Optional arguments
+
+You can use additional options in the arguments of the program. The following are the optional arguments supported:
+
+- -h / --help: Shows a help message about the usage of the program. This argument will stop the execution of the program.
+
+		python3 iris-ml.py --help
+		
+- -o / --original: Uses original data set made by Ronald Fisher instead of the default data set.
+
+		python3 iris-ml.py --original
+		
+- -r RATIO / --ratio RATIO: Changes the split ratio between the training set and the test set. This value must be between 0.0 and 1.0. Its default value is 0.66.
+
+		python3 iris-ml.py -r 0.82
+		
+- -k NEIGHBOURS / --neighbours NEIGHBOURS: Changes the "k" value for the kNN algorithm. This value must be a positive integer. Its default value is 3.
+
+		python3 iris-ml.py -k 5
+		
+
+The combination of this optional arguments is also allowed, as you can see in the following example:
+
+	python3 iris-ml.py --original -r 0.75 -k 4
+	
 ## Authors
 
-- **Carlos Morente** - *Initial work* - [CarlosML27](https://github.com/CarlosML27) 
+- **Carlos Morente** - *Initial work* - [CarlosML27 (Github)](https://github.com/CarlosML27) 
 
 See also the list of the [contributors](https://github.com/CarlosML27/iris-ml/contributors) who participated in this project.
 
@@ -61,4 +86,5 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - **UCI Machine Learning Repository** for the data
 - **Machine Learning Mastery** for the tutorial and the starting idea
+- **StackOverflow and its community** for all the help
 - **PurpleBooth@Github** for this README.md template
