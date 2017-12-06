@@ -99,6 +99,14 @@ def get_result(training_set, test_instance, k):
 	sorted_votes = sorted(class_votes.items(), key=operator.itemgetter(1), reverse=True)
 	return sorted_votes[0][0]
 
+def get_performance(predictions):
+	correct = 0
+	length = len(predictions)
+	for x in range(length):
+		if predictions[x][0] == predictions[x][1]:
+			correct += 1
+	return (correct/float(length)) * 100.0
+
 def main():
 	args = retrieve_args()
 	filename = get_filename(args)
@@ -106,8 +114,13 @@ def main():
 	split_ratio = get_split_ratio(args)
 	training_set, test_set = split_data(rows, split_ratio)
 	k = get_k(args)
-	for x in range(len(test_set)):
+	test_set_length = len(test_set)
+	predictions = [[0 for x in range(2)] for y in range(test_set_length)]
+	for x in range(test_set_length):
 		result = get_result(training_set, test_set[x], k)
-		print("> predicted={}, actual={}".format(repr(result), repr(get_class(test_set[x]))))
-
+		instance_class = get_class(test_set[x])
+		predictions[x][0] = instance_class
+		predictions[x][1] = result
+		print("> predicted={}, actual={}".format(repr(result), repr(instance_class)))
+	print(">>>> ACCURACY: {}%".format(get_performance(predictions)))
 main()
