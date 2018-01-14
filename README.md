@@ -80,7 +80,7 @@ See also the list of the [contributors](https://github.com/CarlosML27/iris-ml/co
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](https://github.com/CarlosML27/iris-ml/LICENSE.md) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](https://github.com/CarlosML27/iris-ml/blob/master/LICENSE) file for details.
 
 ## Acknowledgements
 
